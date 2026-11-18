@@ -1,5 +1,5 @@
 
-const API_URL = 'http://localhost:8081/api/vaccinations';
+const API_URL = '/api/vaccinations';
 
 const getToken = () => localStorage.getItem('bovsmart_auth_token');
 

@@ -49,7 +49,7 @@ export const ForgotPasswordPage: React.FC = () => {
 
     try {
       const response = await fetch(
-        'http://localhost:8081/api/auth/forgot-password',
+        '/api/auth/forgot-password',
         {
           method: 'POST',
           headers: {
@@ -109,7 +109,7 @@ export const ForgotPasswordPage: React.FC = () => {
 
     try {
       const response = await fetch(
-        'http://localhost:8081/api/auth/verify-reset-code',
+        '/api/auth/verify-reset-code',
         {
           method: 'POST',
           headers: {
@@ -155,7 +155,7 @@ export const ForgotPasswordPage: React.FC = () => {
 
     try {
       const response = await fetch(
-        'http://localhost:8081/api/auth/forgot-password',
+        '/api/auth/forgot-password',
         {
           method: 'POST',
           headers: {
@@ -210,7 +210,7 @@ export const ForgotPasswordPage: React.FC = () => {
 
     try {
       const response = await fetch(
-        'http://localhost:8081/api/auth/reset-password',
+        '/api/auth/reset-password',
         {
           method: 'POST',
           headers: {

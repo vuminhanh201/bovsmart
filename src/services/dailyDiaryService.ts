@@ -1,7 +1,7 @@
 
 import { DailyDiary } from '../types';
 
-const API_URL = 'http://localhost:8081/api/daily-diaries';
+const API_URL = '/api/daily-diaries';
 
 type DailyDiaryRequest = Omit<
   DailyDiary,

@@ -17,7 +17,7 @@ interface AuditLogListResponse {
   message: string;
 }
 
-const API_URL = 'http://localhost:8081/api/audit-logs';
+const API_URL = '/api/audit-logs';
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem('bovsmart_auth_token');

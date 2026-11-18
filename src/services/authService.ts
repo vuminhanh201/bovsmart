@@ -1,7 +1,7 @@
 
 import { User } from '../types';
 
-const API_URL = 'http://localhost:8081/api/auth';
+const API_URL = '/api/auth';
 
 export interface LoginResponse {
   success: number;

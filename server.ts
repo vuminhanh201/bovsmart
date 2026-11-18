@@ -73,7 +73,7 @@ async function startServer() {
   ];
 
   // API Routes
-  app.get('/api/health', (_req: Request, res: Response) => {
+  app.get('/api/server-status', (_req: Request, res: Response) => {
     res.json({
       status: 'online',
       system: 'BovSmart Farm Server & IoT Hub',

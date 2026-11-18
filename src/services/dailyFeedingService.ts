@@ -1,5 +1,5 @@
 
-const API_URL = 'http://localhost:8081/api/feeding';
+const API_URL = '/api/feeding';
 
 export interface ApiResponse<T> {
   success: number;

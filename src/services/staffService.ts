@@ -1,5 +1,5 @@
 
-const API_URL = 'http://localhost:8081/api/auth/staff-options';
+const API_URL = '/api/auth/staff-options';
 
 const getToken = () => localStorage.getItem('bovsmart_auth_token');
 

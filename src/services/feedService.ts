@@ -1,7 +1,7 @@
 
-const FEED_API_URL = 'http://localhost:8081/api/feeds';
-const CATEGORY_API_URL = 'http://localhost:8081/api/feed-categories';
-const TRANSACTION_API_URL = 'http://localhost:8081/api/feed-transactions';
+const FEED_API_URL = '/api/feeds';
+const CATEGORY_API_URL = '/api/feed-categories';
+const TRANSACTION_API_URL = '/api/feed-transactions';
 
 export interface BackendFeed {
   id: string;

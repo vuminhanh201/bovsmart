@@ -1,5 +1,5 @@
 
-const API_URL = 'http://localhost:8081/api/files';
+const API_URL = '/api/files';
 
 const getAuthToken = (): string => {
   const token = localStorage.getItem('bovsmart_auth_token');

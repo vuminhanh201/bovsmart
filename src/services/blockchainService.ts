@@ -29,7 +29,7 @@ interface BlockchainVerifyResponse {
   message: string;
 }
 
-const API_URL = 'http://localhost:8081/api/blockchain';
+const API_URL = '/api/blockchain';
 
 const getAuthHeaders = (): HeadersInit => {
   const token = localStorage.getItem('bovsmart_auth_token');

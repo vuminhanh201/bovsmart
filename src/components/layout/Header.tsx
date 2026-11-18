@@ -56,7 +56,7 @@ export const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
 
       try {
         const response = await fetch(
-          `http://localhost:8081/api/files/${encodeURIComponent(fileId)}/url`,
+          `/api/files/${encodeURIComponent(fileId)}/url`,
           {
             headers: {
               Authorization: `Bearer ${token}`,

@@ -1,5 +1,5 @@
 
-const API_URL = 'http://localhost:8081/api/sales-orders';
+const API_URL = '/api/sales-orders';
 
 export interface SalesOrderCattle {
   cattleId: string;

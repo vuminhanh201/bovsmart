@@ -26,7 +26,7 @@ export const SystemSettingsPage: React.FC = () => {
   const fetchServerStatus = async () => {
     setIsTestingServer(true);
     try {
-      const res = await fetch('/api/health');
+      const res = await fetch('/api/server-status');
       if (res.ok) {
         const data = await res.json();
         setApiStatus(data);

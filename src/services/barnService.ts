@@ -1,7 +1,7 @@
 
 import { Barn } from '../types';
 
-const API_URL = 'http://localhost:8081/api/barns';
+const API_URL = '/api/barns';
 
 interface BarnResponse {
   success: number;

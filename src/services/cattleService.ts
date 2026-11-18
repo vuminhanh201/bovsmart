@@ -1,7 +1,7 @@
 
 import { Cattle } from '../types';
 
-const API_URL = 'http://localhost:8081/api/cattle';
+const API_URL = '/api/cattle';
 
 interface CattleResponse {
   success: number;
@@ -214,7 +214,7 @@ export const getPublicCattleTraceApi = async (
   cattleId: string
 ): Promise<PublicCattleTrace> => {
   const response = await fetch(
-    `http://localhost:8081/api/public/trace/${encodeURIComponent(cattleId)}`,
+    `/api/public/trace/${encodeURIComponent(cattleId)}`,
     { method: 'GET' }
   );
 
@@ -244,7 +244,7 @@ export const getPublicCattleVaccinationsApi = async (
   cattleId: string
 ): Promise<PublicVaccinationRecord[]> => {
   const response = await fetch(
-    `http://localhost:8081/api/public/trace/${encodeURIComponent(cattleId)}/vaccinations`,
+    `/api/public/trace/${encodeURIComponent(cattleId)}/vaccinations`,
     { method: 'GET' }
   );
 
@@ -279,7 +279,7 @@ export const getPublicCattleHealthApi = async (
   cattleId: string
 ): Promise<PublicHealthRecord[]> => {
   const response = await fetch(
-    `http://localhost:8081/api/public/trace/${encodeURIComponent(cattleId)}/health`,
+    `/api/public/trace/${encodeURIComponent(cattleId)}/health`,
     { method: 'GET' }
   );
 
