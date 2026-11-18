@@ -1,0 +1,43 @@
+
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Frontend build
+build/
+dist/
+coverage/
+
+# Backend build
+**/target/
+*.jar
+*.war
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+**/application-local.properties
+**/application-secret.properties
+
+# Logs
+*.log
+logs/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Temporary files
+*.tmp
+*.bak
+
+# Local database and uploads
+mongodb-data/
+uploads/
