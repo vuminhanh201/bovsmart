@@ -24,8 +24,6 @@ async function startServer() {
   const app = express();
   const PORT = Number(process.env.PORT) || 3000;
 
-  app.use(express.json());
-
   // In-memory blockchain simulator storage
   interface Block {
     index: number;
@@ -87,7 +85,7 @@ async function startServer() {
     res.json({ blocks: blockchainBlocks });
   });
 
-  app.post('/api/blockchain/mine', (req: Request, res: Response) => {
+  app.post('/api/blockchain/mine', express.json(), (req: Request, res: Response) => {
     const { action, data, operator, role } = req.body;
     const lastBlock = blockchainBlocks[blockchainBlocks.length - 1];
     const index = lastBlock.index + 1;

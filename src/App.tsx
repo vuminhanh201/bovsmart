@@ -98,6 +98,17 @@ const ProtectedLayout: React.FC = () => {
   return <AppLayout />;
 };
 
+// Kiểm tra quyền ADMIN
+const AdminRoute: React.FC = () => {
+  const { currentUser } = useAuthStore();
+
+  if (currentUser?.role !== 'ADMIN') {
+    return <Navigate to="/" replace />;
+  }
+
+  return <Outlet />;
+};
+
 // App
 export default function App() {
   return (
@@ -138,11 +149,12 @@ export default function App() {
             path="/users"
             element={<UserManagementPage />}
           />
-
-          <Route
-            path="/settings"
-            element={<SystemSettingsPage />}
-          />
+          <Route element={<AdminRoute />}>
+            <Route
+              path="/settings"
+              element={<SystemSettingsPage />}
+            />
+          </Route>
 
           <Route
             path="/cattle"

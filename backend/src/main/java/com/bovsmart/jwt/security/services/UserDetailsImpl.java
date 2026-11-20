@@ -3,10 +3,12 @@ package com.bovsmart.jwt.security.services;
 
 import com.bovsmart.jwt.model.User;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
@@ -24,6 +26,9 @@ public class UserDetailsImpl implements UserDetails {
     @JsonIgnore
     private final String password;
 
+    private final boolean enabled;
+    private final Instant lockUntil;
+
     private final Collection<? extends GrantedAuthority> authorities;
 
     public UserDetailsImpl(
@@ -32,6 +37,8 @@ public class UserDetailsImpl implements UserDetails {
             String email,
             String password,
             String department,
+            boolean enabled,
+            Instant lockUntil,
             Collection<? extends GrantedAuthority> authorities) {
 
         this.id = id;
@@ -39,6 +46,8 @@ public class UserDetailsImpl implements UserDetails {
         this.email = email;
         this.password = password;
         this.department = department;
+        this.enabled = enabled;
+        this.lockUntil = lockUntil;
         this.authorities = authorities;
     }
 
@@ -54,6 +63,8 @@ public class UserDetailsImpl implements UserDetails {
                 user.getEmail(),
                 user.getPassword(),
                 user.getDepartment(),
+                user.isEnabled(),
+                user.getLockUntil(),
                 authorities
         );
     }
@@ -92,7 +103,7 @@ public class UserDetailsImpl implements UserDetails {
 
     @Override
     public boolean isAccountNonLocked() {
-        return true;
+        return lockUntil == null || !lockUntil.isAfter(Instant.now());
     }
 
     @Override
@@ -102,7 +113,7 @@ public class UserDetailsImpl implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return true;
+        return enabled;
     }
 
     @Override

@@ -16,5 +16,10 @@ public interface StoredFileRepository extends MongoRepository<StoredFile, String
     );
 
     Optional<StoredFile> findByIdAndDeletedFalse(String id);
-}
 
+    // Tìm tệp theo ID và người sở hữu, chỉ lấy tệp chưa bị xóa
+    Optional<StoredFile> findByIdAndUploadedByAndDeletedFalse(
+            String id,
+            String uploadedBy
+    );
+}

@@ -56,14 +56,20 @@ public class AuthController {
     /**
      * API Đăng nhập — trả về 2 token: Access Token (ngắn hạn) và Refresh Token (dài hạn)
      */
-    @PostMapping("/login")
-    public ResponseEntity<ResponseModel<JwtResponse>> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
+    
+   @PostMapping("/login")
+        public ResponseEntity<ResponseModel<JwtResponse>> authenticateUser(
+                @Valid @RequestBody LoginRequest loginRequest) {
+
+        System.out.println("========== ĐÃ VÀO AUTH CONTROLLER LOGIN ==========");
+
         JwtResponse jwtResponse = authService.login(loginRequest);
+
         return ResponseEntity.ok(ResponseModel.success(
                 jwtResponse,
                 "Đăng nhập thành công!"
         ));
-    }
+        }
 
     /**
      * API Cấp lại Access Token mới từ Refresh Token dài hạn

@@ -7,7 +7,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StreamUtils;
 
 import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
+import java.util.ArrayList;
 
 @Service
 public class KnowledgeIngestionService {
@@ -16,6 +19,25 @@ public class KnowledgeIngestionService {
 
     public KnowledgeIngestionService(QdrantService qdrantService) {
         this.qdrantService = qdrantService;
+    }
+
+    private List<String> resolveAccessRoles(String filename) {
+        String name = filename.toLowerCase(Locale.ROOT);
+
+        if (name.startsWith("admin_")) {
+            return List.of("ADMIN");
+        }
+
+        if (name.startsWith("manager_")) {
+            return List.of("FARM_MANAGER");
+        }
+
+        if (name.startsWith("staff_")) {
+            return List.of("STAFF");
+        }
+
+        // Tài liệu không có tiền tố được xem là kiến thức dùng chung.
+        return List.of("ADMIN", "FARM_MANAGER", "STAFF");
     }
 
     public int ingestAll() throws Exception {
@@ -31,6 +53,12 @@ public class KnowledgeIngestionService {
 
         for (Resource file : files) {
 
+            String filename = file.getFilename();
+
+            if (filename == null || filename.isBlank()) {
+                continue;
+            }
+
             String content = StreamUtils.copyToString(
                     file.getInputStream(),
                     StandardCharsets.UTF_8
@@ -41,12 +69,14 @@ public class KnowledgeIngestionService {
             }
 
             String documentId = UUID.nameUUIDFromBytes(
-                    file.getFilename().getBytes(StandardCharsets.UTF_8)
+                    filename.getBytes(StandardCharsets.UTF_8)
             ).toString();
+
+            List<String> accessRoles = resolveAccessRoles(filename);
 
             String[] paragraphs = content.split("\\n\\s*\\n");
 
-            int chunkIndex = 0;
+            List<String> chunks = new java.util.ArrayList<>();
 
             for (String paragraph : paragraphs) {
 
@@ -56,17 +86,19 @@ public class KnowledgeIngestionService {
                     continue;
                 }
 
-                qdrantService.saveKnowledge(
-                        documentId,
-                        chunkIndex,
-                        chunk,
-                        file.getFilename(),
-                        ""
-                );
-
-                chunkIndex++;
-                savedChunks++;
+                chunks.add(chunk);
             }
+
+            // Tạo embedding và thay thế dữ liệu cũ theo từng tài liệu.
+            qdrantService.replaceKnowledgeDocument(
+                    documentId,
+                    chunks,
+                    filename,
+                    "",
+                    accessRoles
+            );
+
+            savedChunks += chunks.size();
         }
 
         return savedChunks;

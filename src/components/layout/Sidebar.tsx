@@ -148,7 +148,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
           icon: Clock,
           badge: pendingFeeds > 0 ? `${pendingFeeds} ca` : undefined,
           badgeColor: 'bg-amber-100 text-amber-800',
-          allowedRoles: ['ADMIN', 'FARM_MANAGER', 'STAFF'],
+          allowedRoles: ['FARM_MANAGER', 'STAFF'],
           moduleNo: 4,
         },
         {
@@ -239,8 +239,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
           name: 'Cài Đặt Hệ Thống & Cổng Kết Nối',
           path: '/settings',
           icon: Settings,
-          allowedRoles: ['ADMIN', 'FARM_MANAGER'],
-          restrictedBadge: 'Admin / Manager',
+          allowedRoles: ['FARM_MANAGER'],
+          restrictedBadge: 'Chỉ Admin',
           moduleNo: 1,
         },
         {

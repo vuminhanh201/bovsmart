@@ -24,7 +24,6 @@ public class User {
     private boolean enabled = true;
 
     // Thông tin nhân sự
-    // Thông tin nhân sự
     private String fullName;
     private String phone;
     private String department;
