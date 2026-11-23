@@ -6,6 +6,8 @@ import com.bovsmart.jwt.model.FeedCategory;
 import com.bovsmart.jwt.repository.FeedRepository;
 import com.bovsmart.jwt.repository.FeedCategoryRepository;
 import com.bovsmart.jwt.service.FeedService;
+import com.bovsmart.jwt.model.FeedTransaction;
+import com.bovsmart.jwt.repository.FeedTransactionRepository;
 
 import org.springframework.stereotype.Service;
 
@@ -16,12 +18,16 @@ public class FeedServiceImpl implements FeedService {
 
     private final FeedRepository feedRepository;
     private final FeedCategoryRepository categoryRepository;
+    private final FeedTransactionRepository transactionRepository;
 
     public FeedServiceImpl(
             FeedRepository feedRepository,
-            FeedCategoryRepository categoryRepository) {
+            FeedCategoryRepository categoryRepository,
+            FeedTransactionRepository transactionRepository) {
+
         this.feedRepository = feedRepository;
         this.categoryRepository = categoryRepository;
+        this.transactionRepository = transactionRepository;
     }
 
     // Thêm thức ăn mới
@@ -137,11 +143,35 @@ public class FeedServiceImpl implements FeedService {
         return feedRepository.save(existing);
     }
 
-    // Xóa thức ăn
+   // Xóa thức ăn an toàn, bảo toàn lịch sử nhập/xuất
     @Override
     public void deleteFeed(String id) {
+
         Feed feed = getFeedById(id);
-        feedRepository.delete(feed);
+
+        List<FeedTransaction> transactions =
+                transactionRepository.findByFeedIdOrderByTransactionDateDesc(id);
+
+        // Không cho xóa khi còn phiếu chờ xử lý
+        boolean hasPendingTransaction = transactions.stream()
+                .anyMatch(transaction ->
+                        "PENDING".equalsIgnoreCase(
+                                transaction.getTransactionStatus()));
+
+        if (hasPendingTransaction) {
+            throw new RuntimeException(
+                    "Không thể xóa nguyên liệu vì vẫn còn phiếu nhập/xuất đang chờ duyệt!");
+        }
+
+        // Chưa có lịch sử giao dịch: xóa vật lý
+        if (transactions.isEmpty()) {
+            feedRepository.delete(feed);
+            return;
+        }
+
+        // Đã có lịch sử: chuyển sang ngừng sử dụng
+        feed.setStatus("INACTIVE");
+        feedRepository.save(feed);
     }
 
     // Lấy thức ăn theo danh mục

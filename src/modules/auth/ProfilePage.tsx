@@ -26,19 +26,7 @@ export const ProfilePage: React.FC = () => {
 
   const [name, setName] = useState(currentUser.name);
   const [phone, setPhone] = useState(currentUser.phone);
-  const departments = [
-    'Quản trị hệ thống',
-    'Chăm sóc bò',
-    'Quản lý trang trại',
-    'Thú y',
-    'Khác',
-  ];
-
-const [department, setDepartment] = useState(currentUser.department || '');
-
-const [isOtherDepartment, setIsOtherDepartment] = useState(false);
-
-const [otherDepartment, setOtherDepartment] = useState('');
+  const department = currentUser.department || 'Chưa được phân công';
 
   // Lưu mã MinIO, không lưu URL tạm thời
   const [avatar, setAvatar] = useState(currentUser.avatar || '');
@@ -108,15 +96,6 @@ const [otherDepartment, setOtherDepartment] = useState('');
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (isOtherDepartment && !otherDepartment.trim()) {
-      addToast(
-        'error',
-        'Thiếu phòng ban',
-        'Vui lòng nhập tên phòng ban khác.'
-      );
-      return;
-    }
-
     try {
       setUploading(true);
 
@@ -129,14 +108,14 @@ const [otherDepartment, setOtherDepartment] = useState('');
       }
 
       // Lưu mã ảnh vào MongoDB thông qua API hồ sơ
-      const updatedProfile = await updateProfileApi(
-        currentUser.username || currentUser.email,
-        currentUser.email,
-        avatarToSave || null,
-        name,
-        phone,
-        isOtherDepartment ? otherDepartment.trim() : department
-      );
+    const updatedProfile = await updateProfileApi(
+      currentUser.username || currentUser.email,
+      currentUser.email,
+      avatarToSave || null,
+      name,
+      phone,
+      currentUser.department || ''
+    );
 
       setAvatar(updatedProfile.avatar || '');
       setSelectedFile(null);
@@ -336,40 +315,20 @@ const [otherDepartment, setOtherDepartment] = useState('');
                   Phòng ban / Bộ phận
                 </label>
 
-                <select
-                  value={isOtherDepartment ? 'Khác' : department}
-                  onChange={(e) => {
-                    const value = e.target.value;
+                <div className="relative">
+                  <Building className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
 
-                    if (value === 'Khác') {
-                      setIsOtherDepartment(true);
-                      setDepartment('');
-                    } else {
-                      setIsOtherDepartment(false);
-                      setDepartment(value);
-                      setOtherDepartment('');
-                    }
-                  }}
-                  className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
-                >
-                  <option value="">-- Chọn phòng ban --</option>
-
-                  {departments.map((item) => (
-                    <option key={item} value={item}>
-                      {item}
-                    </option>
-                  ))}
-                </select>
-
-                {isOtherDepartment && (
                   <input
                     type="text"
-                    value={otherDepartment}
-                    onChange={(e) => setOtherDepartment(e.target.value)}
-                    placeholder="Nhập tên phòng ban khác..."
-                    className="w-full mt-2 px-3 py-2 text-xs rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    value={department}
+                    readOnly
+                    className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 text-slate-600 cursor-not-allowed"
                   />
-                )}
+                </div>
+
+                <span className="text-[10px] text-slate-400 mt-1 block">
+                  Phòng ban do quản trị viên hệ thống phân công.
+                </span>
               </div>
             </div>
 

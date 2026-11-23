@@ -199,20 +199,10 @@ public class AuthServiceImpl implements AuthService {
                                 email,
                                 passwordEncoder.encode(registerRequest.getPassword()));
 
-                Set<String> strRoles = registerRequest.getRoles();
+               // Tài khoản đăng ký mặc định chỉ được cấp quyền STAFF.
+               // Không nhận quyền từ dữ liệu người dùng gửi lên.
                 Set<String> roles = new HashSet<>();
-
-                if (strRoles == null || strRoles.isEmpty()) {
-                        roles.add("ROLE_USER");
-                } else {
-                        strRoles.forEach(role -> {
-                                if (role.startsWith("ROLE_")) {
-                                        roles.add(role.toUpperCase());
-                                } else {
-                                        roles.add("ROLE_" + role.toUpperCase());
-                                }
-                        });
-                }
+                roles.add("ROLE_STAFF");
 
                 user.setRoles(roles);
 
@@ -446,7 +436,6 @@ public class AuthServiceImpl implements AuthService {
                 fullName = fullName.trim();
 
                 phone = phone == null ? null : phone.trim();
-                department = department == null ? null : department.trim();
 
                 // 3. Kiểm tra username trùng
                 if (!username.equals(user.getUsername())
@@ -488,7 +477,6 @@ public class AuthServiceImpl implements AuthService {
                 // 7. Cập nhật thông tin nhân sự
                 user.setFullName(fullName);
                 user.setPhone(phone);
-                user.setDepartment(department);
 
                 // 8. Lưu MongoDB
                 return userRepository.save(user);

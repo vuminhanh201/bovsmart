@@ -239,7 +239,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
           name: 'Cài Đặt Hệ Thống & Cổng Kết Nối',
           path: '/settings',
           icon: Settings,
-          allowedRoles: ['FARM_MANAGER'],
+          allowedRoles: ['ADMIN'],
           restrictedBadge: 'Chỉ Admin',
           moduleNo: 1,
         },

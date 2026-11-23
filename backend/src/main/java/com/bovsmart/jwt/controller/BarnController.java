@@ -28,6 +28,7 @@ public class BarnController {
     }
 
     // 1. Thêm chuồng
+    @PreAuthorize("hasRole('FARM_MANAGER')")
     @PostMapping
     public ResponseEntity<ResponseModel<Barn>> createBarn(
             @RequestBody Barn barn) {
@@ -45,6 +46,7 @@ public class BarnController {
     }
 
     // 2. Xem danh sách chuồng
+    @PreAuthorize("hasAnyRole('ADMIN', 'FARM_MANAGER', 'STAFF')")
     @GetMapping
     public ResponseEntity<ResponseModel<List<Barn>>> getAllBarns() {
         return ResponseEntity.ok(
@@ -56,6 +58,7 @@ public class BarnController {
     }
 
     // 3. Xem chi tiết chuồng
+    @PreAuthorize("hasAnyRole('ADMIN', 'FARM_MANAGER', 'STAFF')")
     @GetMapping("/{id}")
     public ResponseEntity<ResponseModel<Barn>> getBarnById(
             @PathVariable String id) {
@@ -72,6 +75,7 @@ public class BarnController {
     }
 
     // 4. Cập nhật chuồng
+    @PreAuthorize("hasRole('FARM_MANAGER')")
     @PutMapping("/{id}")
     public ResponseEntity<ResponseModel<Barn>> updateBarn(
             @PathVariable String id,
@@ -97,6 +101,7 @@ public class BarnController {
     }
 
     // 5. Xóa chuồng
+    @PreAuthorize("hasRole('FARM_MANAGER')")
     @DeleteMapping("/{id}")
     public ResponseEntity<ResponseModel<Void>> deleteBarn(
             @PathVariable String id) {
@@ -114,6 +119,7 @@ public class BarnController {
     }
 
     // 6. Kiểm tra sức chứa chuồng
+    @PreAuthorize("hasAnyRole('ADMIN', 'FARM_MANAGER', 'STAFF')")
     @GetMapping("/check-capacity/{code}")
     public ResponseEntity<ResponseModel<Map<String, Object>>> checkCapacity(
             @PathVariable String code) {
@@ -130,6 +136,7 @@ public class BarnController {
     }
 
     // 7. Xác nhận kiểm tra chuồng
+    @PreAuthorize("hasRole('FARM_MANAGER')")
     @PostMapping("/check-capacity/{code}/confirm")
     public ResponseEntity<ResponseModel<BarnCapacityCheck>> confirmCapacityCheck(
             @PathVariable String code) {
@@ -146,6 +153,7 @@ public class BarnController {
     }
 
     // 8. Xem lịch sử kiểm tra chuồng
+    @PreAuthorize("hasAnyRole('ADMIN', 'FARM_MANAGER', 'STAFF')")
     @GetMapping("/check-capacity/{code}/history")
     public ResponseEntity<ResponseModel<List<BarnCapacityCheck>>> getCapacityCheckHistory(
             @PathVariable String code) {
@@ -182,6 +190,7 @@ public class BarnController {
     }
 
     // 10. Xem lịch sử điều chuyển bò
+    @PreAuthorize("hasAnyRole('ADMIN', 'FARM_MANAGER', 'STAFF')")
     @GetMapping("/cattle/{cattleId}/transfer-history")
     public ResponseEntity<ResponseModel<List<CattleTransfer>>> getCattleTransferHistory(
             @PathVariable String cattleId) {

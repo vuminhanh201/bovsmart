@@ -1,3 +1,4 @@
+
 package com.bovsmart.jwt.repository;
 
 import java.util.List;
@@ -9,13 +10,15 @@ import com.bovsmart.jwt.model.FeedTransaction;
 public interface FeedTransactionRepository
         extends MongoRepository<FeedTransaction, String> {
 
-    List<FeedTransaction> findByFeedId(String feedId);
+    List<FeedTransaction> findByFeedIdOrderByTransactionDateDesc(String feedId);
 
-    List<FeedTransaction> findByTransactionType(String transactionType);
+    List<FeedTransaction> findByTransactionTypeOrderByTransactionDateDesc(String transactionType);
 
-    List<FeedTransaction> findByTransactionStatus(String transactionStatus);
+    List<FeedTransaction> findByTransactionStatusOrderByTransactionDateDesc(String transactionStatus);
 
-    List<FeedTransaction> findByCreatedBy(String createdBy);
+    List<FeedTransaction> findByCreatedByOrderByTransactionDateDesc(String createdBy);
 
-    List<FeedTransaction> findByReviewedBy(String reviewedBy);
+    List<FeedTransaction> findByReviewedByOrderByTransactionDateDesc(String reviewedBy);
+
+    List<FeedTransaction> findAllByOrderByTransactionDateDesc();
 }

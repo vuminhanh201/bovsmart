@@ -28,6 +28,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
@@ -39,18 +40,6 @@ public class AuthController {
     @Autowired
     public AuthController(AuthService authService) {
         this.authService = authService;
-    }
-
-    /**
-     * API Đăng ký tài khoản mới
-     */
-    @PostMapping("/register")
-    public ResponseEntity<ResponseModel<?>> registerUser(@Valid @RequestBody RegisterRequest registerRequest) {
-        String username = authService.register(registerRequest);
-        return ResponseEntity.ok(ResponseModel.success(
-                null,
-                "Đăng ký tài khoản [" + username + "] thành công!"
-        ));
     }
 
     /**
@@ -295,7 +284,7 @@ public ResponseModel<List<AccountResponse>> getStaffOptions(
 }
 
 // GET danh sách tài khoản
-
+@PreAuthorize("hasRole('ADMIN')")
 @GetMapping("/accounts")
 public ResponseModel<List<AccountResponse>> getAllAccounts() {
 
@@ -329,6 +318,7 @@ public ResponseModel<List<AccountResponse>> getAllAccounts() {
 
 
 // POST tạo tài khoản nhân sự
+@PreAuthorize("hasRole('ADMIN')")
 @PostMapping("/accounts")
 public ResponseEntity<ResponseModel<?>> createAccount(
         @Valid @RequestBody CreateAccountRequest request) {
@@ -344,6 +334,7 @@ public ResponseEntity<ResponseModel<?>> createAccount(
 }
 
 // PUT cập nhật tài khoản nhân sự
+@PreAuthorize("hasRole('ADMIN')")
 @PutMapping("/accounts/{userId}")
 public ResponseEntity<ResponseModel<?>> updateAccount(
         @PathVariable String userId,
@@ -360,6 +351,7 @@ public ResponseEntity<ResponseModel<?>> updateAccount(
 }
 
 // PUT khóa tài khoản
+@PreAuthorize("hasRole('ADMIN')")
 @PutMapping("/accounts/{userId}/lock")
 public ResponseEntity<ResponseModel<?>> lockAccount(
         @PathVariable String userId) {
@@ -375,6 +367,7 @@ public ResponseEntity<ResponseModel<?>> lockAccount(
 }
 
 // PUT mở khóa tài khoản
+@PreAuthorize("hasRole('ADMIN')")
 @PutMapping("/accounts/{userId}/unlock")
 public ResponseEntity<ResponseModel<?>> unlockAccount(
         @PathVariable String userId) {

@@ -8,12 +8,15 @@ import {
   getAllFeedCategoriesApi,
   getAllFeedTransactionsApi,
   createFeedApi,
+  updateFeedApi,
+  deleteFeedApi,
   createFeedTransactionApi,
   approveFeedTransactionApi,
   rejectFeedTransactionApi,
   type BackendFeed,
   type BackendFeedCategory,
   type BackendFeedTransaction,
+  type UpdateFeedRequest,
 } from '../../services/feedService';
 import {
   Wheat,
@@ -116,6 +119,7 @@ interface TransactionView {
   feedItemName: string;
   quantity: number;
   date: string;
+  rawDate: string;
   performedBy: string;
   note: string;
   status: string;
@@ -153,6 +157,25 @@ export const FeedInventoryPage: React.FC = () => {
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [importSupplierOption, setImportSupplierOption] = useState('');
   const [newFeedSupplierOption, setNewFeedSupplierOption] = useState('');
+
+  const [transactionSearch, setTransactionSearch] = useState('');
+  const [transactionTypeFilter, setTransactionTypeFilter] = useState('ALL');
+  const [transactionStatusFilter, setTransactionStatusFilter] = useState('ALL');
+  const [transactionFromDate, setTransactionFromDate] = useState('');
+  const [transactionToDate, setTransactionToDate] = useState('');
+
+  const [isEditFeedModalOpen, setIsEditFeedModalOpen] = useState(false);
+  const [editingFeedId, setEditingFeedId] = useState('');
+
+  const [editFeed, setEditFeed] = useState({
+    name: '',
+    category: '',
+    unit: 'kg',
+    reorderLevel: 0,
+    unitPrice: 0,
+    supplier: '',
+    status: 'ACTIVE',
+  });
 
   const [importForm, setImportForm] = useState({
     feedItemId: '',
@@ -249,6 +272,7 @@ export const FeedInventoryPage: React.FC = () => {
         feedItemName: tx.feedName,
         quantity: Number(tx.quantity || 0),
         date: formatDate(tx.transactionDate),
+        rawDate: String(tx.transactionDate || ''),
         performedBy: tx.createdBy || '-',
         note: tx.note || '',
         status: tx.transactionStatus || 'PENDING',
@@ -257,6 +281,61 @@ export const FeedInventoryPage: React.FC = () => {
       })),
     [backendFeedTransactions]
   );
+
+  const filteredFeedTransactions = useMemo(() => {
+    const keyword = transactionSearch.trim().toLowerCase();
+
+    return feedTransactions.filter((tx) => {
+      const matchesSearch =
+        !keyword ||
+        String(tx.id || '').toLowerCase().includes(keyword) ||
+        String(tx.feedItemName || '').toLowerCase().includes(keyword) ||
+        String(tx.performedBy || '').toLowerCase().includes(keyword) ||
+        String(tx.note || '').toLowerCase().includes(keyword) ||
+        (tx.reviewedBy || '').toLowerCase().includes(keyword) ||
+        (tx.reviewNote || '').toLowerCase().includes(keyword);
+
+      const matchesType =
+        transactionTypeFilter === 'ALL' ||
+        tx.type === transactionTypeFilter;
+
+      const matchesStatus =
+        transactionStatusFilter === 'ALL' ||
+        tx.status === transactionStatusFilter;
+
+      // transactionDate từ backend thường có định dạng ISO.
+      const dateKey = tx.rawDate.slice(0, 10);
+
+      const matchesFromDate =
+        !transactionFromDate || dateKey >= transactionFromDate;
+
+      const matchesToDate =
+        !transactionToDate || dateKey <= transactionToDate;
+
+      return (
+        matchesSearch &&
+        matchesType &&
+        matchesStatus &&
+        matchesFromDate &&
+        matchesToDate
+      );
+    });
+  }, [
+    feedTransactions,
+    transactionSearch,
+    transactionTypeFilter,
+    transactionStatusFilter,
+    transactionFromDate,
+    transactionToDate,
+  ]);
+
+  const resetTransactionFilters = () => {
+    setTransactionSearch('');
+    setTransactionTypeFilter('ALL');
+    setTransactionStatusFilter('ALL');
+    setTransactionFromDate('');
+    setTransactionToDate('');
+  };
 
   const totalValueVND = feedItems.reduce(
     (total, item) => total + item.stockQuantity * item.unitPrice,
@@ -325,6 +404,131 @@ export const FeedInventoryPage: React.FC = () => {
     }));
 
     setIsExportModalOpen(true);
+  };
+
+  const openEditFeedModal = (feed: BackendFeed) => {
+    if (!canManageFeed) {
+      addToast('error', 'Không có quyền', 'Bạn không có quyền sửa nguyên liệu.');
+      return;
+    }
+
+    setEditingFeedId(feed.id);
+
+    setEditFeed({
+      name: feed.feedName || '',
+      category: feed.categoryId || '',
+      unit: feed.unit || 'kg',
+      reorderLevel: Number(feed.minStock || 0),
+      unitPrice: Number(feed.unitPrice || 0),
+      supplier: feed.description || '',
+      status: feed.status || 'ACTIVE',
+    });
+
+    setIsEditFeedModalOpen(true);
+  };
+
+  const handleUpdateFeed = async (event: React.FormEvent) => {
+    event.preventDefault();
+
+    if (!canManageFeed) {
+      addToast('error', 'Không có quyền', 'Bạn không có quyền sửa nguyên liệu.');
+      return;
+    }
+
+    if (!editingFeedId) {
+      addToast('error', 'Không tìm thấy', 'Không xác định được nguyên liệu cần sửa.');
+      return;
+    }
+
+    if (!editFeed.name.trim()) {
+      addToast('error', 'Thiếu thông tin', 'Vui lòng nhập tên nguyên liệu.');
+      return;
+    }
+
+    if (!editFeed.category) {
+      addToast('error', 'Thiếu thông tin', 'Vui lòng chọn danh mục thức ăn.');
+      return;
+    }
+
+    if (
+      !editFeed.unit.trim() ||
+      editFeed.reorderLevel < 0 ||
+      editFeed.unitPrice < 0
+    ) {
+      addToast('error', 'Dữ liệu không hợp lệ', 'Vui lòng kiểm tra đơn vị, ngưỡng tồn kho và đơn giá.');
+      return;
+    }
+
+    const category = categoryOptions.find(
+      (item) => item.value === editFeed.category
+    );
+
+    if (!category) {
+      addToast('error', 'Danh mục không hợp lệ', 'Vui lòng tải lại danh sách danh mục.');
+      return;
+    }
+
+    try {
+      setIsSavingFeed(true);
+
+      const payload: UpdateFeedRequest = {
+        feedName: editFeed.name.trim(),
+        categoryId: category.value,
+        unit: editFeed.unit.trim(),
+        minStock: editFeed.reorderLevel,
+        unitPrice: editFeed.unitPrice,
+        description: editFeed.supplier.trim(),
+        status: editFeed.status,
+      };
+
+      await updateFeedApi(editingFeedId, payload);
+
+      addToast('success', 'Thành công', 'Cập nhật nguyên liệu thức ăn thành công.');
+
+      setIsEditFeedModalOpen(false);
+      setEditingFeedId('');
+
+      await loadFeedData();
+    } catch (error) {
+      addToast(
+        'error',
+        'Lỗi cập nhật nguyên liệu',
+        getErrorMessage(error, 'Không thể cập nhật nguyên liệu thức ăn.')
+      );
+    } finally {
+      setIsSavingFeed(false);
+    }
+  };
+
+  const handleDeleteFeed = async (feed: BackendFeed) => {
+    if (!canManageFeed) {
+      addToast('error', 'Không có quyền', 'Bạn không có quyền xóa nguyên liệu.');
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Bạn có chắc chắn muốn xóa nguyên liệu "${feed.feedName}" không?`
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setProcessingTransactionId(feed.id);
+
+      await deleteFeedApi(feed.id);
+
+      addToast('success', 'Thành công', 'Đã xử lý yêu cầu xóa nguyên liệu.');
+
+      await loadFeedData();
+    } catch (error) {
+      addToast(
+        'error',
+        'Lỗi xóa nguyên liệu',
+        getErrorMessage(error, 'Không thể xóa nguyên liệu thức ăn.')
+      );
+    } finally {
+      setProcessingTransactionId(null);
+    }
   };
 
   const handleAddFeed = async (event: React.FormEvent) => {
@@ -825,7 +1029,7 @@ export const FeedInventoryPage: React.FC = () => {
                   <th className="py-3 px-4">Ngưỡng báo động</th>
                   <th className="py-3 px-4">Đơn giá</th>
                   <th className="py-3 px-4">Thông tin nhà cung cấp</th>
-                  {canCreateTransaction && (
+                  {canManageFeed && (
                     <th className="py-3 px-4 text-right">Thao tác</th>
                   )}
                 </tr>
@@ -886,26 +1090,33 @@ export const FeedInventoryPage: React.FC = () => {
                         {item.supplier}
                       </td>
 
-                      {canCreateTransaction && (
-                        <td className="py-3.5 px-4">
-                          <div className="flex items-center justify-end gap-1.5">
-                            <button
-                              type="button"
-                              onClick={() => openImportModal(item.id)}
-                              className="px-2 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded-lg font-bold"
-                            >
-                              + Nhập
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => openExportModal(item.id)}
-                              className="px-2 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 rounded-lg font-bold"
-                            >
-                              - Xuất
-                            </button>
-                          </div>
-                        </td>
-                      )}
+                     {canManageFeed && (
+                      <td className="py-3.5 px-4">
+                       <div className="flex items-center justify-end gap-1.5">
+                        <button
+                            type="button"
+                            onClick={() => {
+                              if (backendFeed) openEditFeedModal(backendFeed);
+                            }}
+                            disabled={!backendFeed || processingTransactionId === item.id}
+                            className="px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg font-bold disabled:opacity-50"
+                          >
+                            Sửa
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (backendFeed) void handleDeleteFeed(backendFeed);
+                            }}
+                            disabled={!backendFeed || processingTransactionId === item.id}
+                            className="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-lg font-bold disabled:opacity-50"
+                          >
+                            Xóa
+                          </button>
+                        </div>
+                      </td>
+                    )}
                     </tr>
                   );
                 })}
@@ -929,9 +1140,95 @@ export const FeedInventoryPage: React.FC = () => {
           </div>
         </div>
 
-        {feedTransactions.length === 0 ? (
+        {/* Bộ lọc giao dịch */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div className="sm:col-span-2 lg:col-span-3">
+            <label className="block text-xs font-semibold text-slate-600 mb-1">
+              Tìm kiếm giao dịch
+            </label>
+            <input
+              type="text"
+              value={transactionSearch}
+              onChange={(event) => setTransactionSearch(event.target.value)}
+              placeholder="Tìm theo mã phiếu, nguyên liệu, người lập, ghi chú..."
+              className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs outline-none focus:border-emerald-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-600 mb-1">
+              Loại phiếu
+            </label>
+            <select
+              value={transactionTypeFilter}
+              onChange={(event) => setTransactionTypeFilter(event.target.value)}
+              className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white text-xs"
+            >
+              <option value="ALL">Tất cả loại phiếu</option>
+              <option value="IMPORT">Nhập kho</option>
+              <option value="EXPORT">Xuất kho</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-600 mb-1">
+              Trạng thái
+            </label>
+            <select
+              value={transactionStatusFilter}
+              onChange={(event) => setTransactionStatusFilter(event.target.value)}
+              className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white text-xs"
+            >
+              <option value="ALL">Tất cả trạng thái</option>
+              <option value="PENDING">Chờ duyệt</option>
+              <option value="APPROVED">Đã duyệt</option>
+              <option value="REJECTED">Đã từ chối</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-600 mb-1">
+              Từ ngày
+            </label>
+            <input
+              type="date"
+              value={transactionFromDate}
+              onChange={(event) => setTransactionFromDate(event.target.value)}
+              className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-600 mb-1">
+              Đến ngày
+            </label>
+            <input
+              type="date"
+              value={transactionToDate}
+              onChange={(event) => setTransactionToDate(event.target.value)}
+              className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs"
+            />
+          </div>
+
+          <div className="flex items-end">
+            <button
+              type="button"
+              onClick={resetTransactionFilters}
+              className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-xs font-semibold text-slate-600"
+            >
+              Xóa bộ lọc
+            </button>
+          </div>
+        </div>
+
+        <div className="text-xs text-slate-500">
+          Hiển thị {filteredFeedTransactions.length} / {feedTransactions.length} giao dịch
+        </div>
+
+        {/* Danh sách giao dịch */}
+        {filteredFeedTransactions.length === 0 ? (
           <div className="text-center py-8 text-slate-400 text-xs">
-            Chưa có giao dịch nhập xuất kho nào.
+            Không tìm thấy giao dịch phù hợp.
           </div>
         ) : (
           <div className="overflow-x-auto border border-slate-100 rounded-2xl">
@@ -952,7 +1249,7 @@ export const FeedInventoryPage: React.FC = () => {
               </thead>
 
               <tbody className="divide-y divide-slate-100">
-                {feedTransactions.map((tx) => {
+                {filteredFeedTransactions.map((tx) => {
                   const status = getStatusDisplay(tx.status);
                   const isPending = tx.status === 'PENDING';
                   const isProcessing = processingTransactionId === tx.id;
@@ -1498,6 +1795,175 @@ export const FeedInventoryPage: React.FC = () => {
                   className="px-5 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-bold disabled:opacity-50"
                 >
                   {isSavingTransaction ? 'Đang lưu...' : 'Lưu Phiếu Xuất'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit feed modal */}
+      {isEditFeedModalOpen && canManageFeed && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+              <h3 className="font-bold text-base text-slate-900">
+                Sửa Nguyên Liệu Thức Ăn
+              </h3>
+
+              <button
+                type="button"
+                onClick={() => setIsEditFeedModalOpen(false)}
+                className="p-1 text-slate-400"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleUpdateFeed} className="space-y-4 text-xs">
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">
+                  Tên thức ăn
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editFeed.name}
+                  onChange={(event) =>
+                    setEditFeed({ ...editFeed, name: event.target.value })
+                  }
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">
+                    Phân loại
+                  </label>
+                  <select
+                    required
+                    value={editFeed.category}
+                    onChange={(event) =>
+                      setEditFeed({ ...editFeed, category: event.target.value })
+                    }
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white"
+                  >
+                    <option value="">-- Chọn danh mục --</option>
+                    {categoryOptions.map((category) => (
+                      <option key={category.value} value={category.value}>
+                        {category.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">
+                    Đơn vị tính
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={editFeed.unit}
+                    onChange={(event) =>
+                      setEditFeed({ ...editFeed, unit: event.target.value })
+                    }
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">
+                    Ngưỡng cảnh báo
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    required
+                    value={editFeed.reorderLevel}
+                    onChange={(event) =>
+                      setEditFeed({
+                        ...editFeed,
+                        reorderLevel: Number(event.target.value),
+                      })
+                    }
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">
+                    Đơn giá
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    required
+                    value={editFeed.unitPrice}
+                    onChange={(event) =>
+                      setEditFeed({
+                        ...editFeed,
+                        unitPrice: Number(event.target.value),
+                      })
+                    }
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">
+                  Nhà cung cấp
+                </label>
+                <input
+                  type="text"
+                  value={editFeed.supplier}
+                  onChange={(event) =>
+                    setEditFeed({ ...editFeed, supplier: event.target.value })
+                  }
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200"
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">
+                  Trạng thái
+                </label>
+                <select
+                  value={editFeed.status}
+                  onChange={(event) =>
+                    setEditFeed({ ...editFeed, status: event.target.value })
+                  }
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white"
+                >
+                  <option value="ACTIVE">Đang sử dụng</option>
+                  <option value="INACTIVE">Ngừng sử dụng</option>
+                </select>
+              </div>
+
+              <p className="text-[11px] text-amber-700 bg-amber-50 rounded-lg p-2">
+                Số lượng tồn kho không được chỉnh sửa tại đây. Tồn kho chỉ thay đổi
+                thông qua phiếu nhập hoặc xuất đã được quản lý xác nhận.
+              </p>
+
+              <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setIsEditFeedModalOpen(false)}
+                  className="px-4 py-2 border border-slate-200 rounded-xl text-slate-600 font-semibold"
+                >
+                  Hủy
+                </button>
+
+                <button
+                  type="submit"
+                  disabled={isSavingFeed}
+                  className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold disabled:opacity-50"
+                >
+                  {isSavingFeed ? 'Đang lưu...' : 'Lưu thay đổi'}
                 </button>
               </div>
             </form>

@@ -264,8 +264,9 @@ public class GeminiService {
     private User getCurrentUser(Authentication authentication) {
 
         if (authentication == null
-                || !authentication.isAuthenticated()) {
-            throw new AccessDeniedException("Bạn chưa đăng nhập.");
+                || !authentication.isAuthenticated()
+                || "anonymousUser".equals(authentication.getName())) {
+                throw new AccessDeniedException("Bạn chưa đăng nhập.");
         }
 
         String identity = authentication.getName();
@@ -279,13 +280,13 @@ public class GeminiService {
                 );
 
         if (!user.isEnabled()) {
-            throw new AccessDeniedException(
-                    "Tài khoản đã bị vô hiệu hóa."
-            );
+                throw new AccessDeniedException(
+                        "Tài khoản đã bị vô hiệu hóa."
+                );
         }
 
         return user;
-    }
+   }
 
     private boolean hasRole(User user, String role) {
 
@@ -1335,12 +1336,6 @@ for (Map<String, Object> point : safeList(searchResults)) {
         throw new IllegalStateException(
                 "Gemini trả về câu trả lời rỗng."
         );
-        }
-
-        if (answer.isEmpty()) {
-            throw new IllegalStateException(
-                    "Gemini trả về câu trả lời rỗng."
-            );
         }
 
         return new ChatbotResponse(

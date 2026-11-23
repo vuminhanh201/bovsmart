@@ -29,9 +29,11 @@ public class FeedTransactionController {
     // ADMIN, FARM_MANAGER, STAFF được xem dữ liệu.
     private void checkReadAccess(Authentication authentication) {
 
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new AccessDeniedException(
-                    "Bạn chưa được xác thực!");
+        if (authentication == null
+                || !authentication.isAuthenticated()
+                || "anonymousUser".equals(authentication.getName())) {
+        throw new AccessDeniedException(
+                "Bạn chưa được xác thực!");
         }
 
         boolean allowed = authentication.getAuthorities().stream()

@@ -60,6 +60,7 @@ public class CattleController {
     }
 
     // 2. Lấy danh sách bò
+    @PreAuthorize("hasAnyRole('ADMIN', 'FARM_MANAGER', 'STAFF')")
     @GetMapping
     public ResponseModel<List<Cattle>> getAllCattle() {
 
@@ -72,6 +73,7 @@ public class CattleController {
     }
 
     // 3. Lấy chi tiết bò
+    @PreAuthorize("hasAnyRole('ADMIN', 'FARM_MANAGER', 'STAFF')")
     @GetMapping("/{id}")
     public ResponseEntity<ResponseModel<Cattle>> getCattleById(
             @PathVariable String id) {
@@ -151,6 +153,7 @@ public class CattleController {
     }
 
     // 6. Tìm kiếm và lọc hồ sơ bò
+    @PreAuthorize("hasAnyRole('ADMIN', 'FARM_MANAGER', 'STAFF')")
     @GetMapping("/search")
     public ResponseModel<List<Cattle>> searchCattle(
             @RequestParam(required = false) String keyword,
@@ -212,7 +215,7 @@ public class CattleController {
     }
 
     // 8. Lấy danh sách bò đủ điều kiện xuất bán
-    @GetMapping("/sale-eligibil    ity")
+    @GetMapping("/sale-eligibility")
     @PreAuthorize("hasAnyRole('ADMIN', 'FARM_MANAGER', 'STAFF')")
     public ResponseModel<List<SaleEligibilityResponse>> getEligibleCattleForSale() {
 

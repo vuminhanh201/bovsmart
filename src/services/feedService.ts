@@ -137,10 +137,49 @@ export const createFeedApi = async (
     headers: getAuthHeaders(),
     body: JSON.stringify(request),
   });
-
   return handleApiResponse(
     response,
     'Không thể tạo thức ăn mới.',
+  );
+};
+
+export interface UpdateFeedRequest {
+  feedName: string;
+  categoryId: string;
+  unit: string;
+  minStock: number;
+  unitPrice: number;
+  description?: string;
+  status?: string;
+}
+
+export const updateFeedApi = async (
+  id: string,
+  request: UpdateFeedRequest,
+): Promise<BackendFeed> => {
+  const response = await fetch(`${FEED_API_URL}/${encodeURIComponent(id)}`, {
+    method: 'PUT',
+    headers: getAuthHeaders(),
+    body: JSON.stringify(request),
+  });
+
+  return handleApiResponse(
+    response,
+    'Không thể cập nhật nguyên liệu thức ăn.',
+  );
+};
+
+export const deleteFeedApi = async (
+  id: string,
+): Promise<string> => {
+  const response = await fetch(`${FEED_API_URL}/${encodeURIComponent(id)}`, {
+    method: 'DELETE',
+    headers: getAuthHeaders(),
+  });
+
+  return handleApiResponse(
+    response,
+    'Không thể xóa nguyên liệu thức ăn.',
   );
 };
 

@@ -6,6 +6,7 @@ import com.bovsmart.jwt.service.FeedService;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,6 +22,7 @@ public class FeedController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('FARM_MANAGER')")
     public ResponseEntity<ResponseModel<Feed>> createFeed(
             @RequestBody Feed feed) {
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -30,6 +32,7 @@ public class FeedController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'FARM_MANAGER', 'STAFF')")
     public ResponseEntity<ResponseModel<List<Feed>>> getAllFeeds() {
         return ResponseEntity.ok(
                 ResponseModel.success(
@@ -38,6 +41,7 @@ public class FeedController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'FARM_MANAGER', 'STAFF')")
     public ResponseEntity<ResponseModel<Feed>> getFeedById(
             @PathVariable String id) {
         return ResponseEntity.ok(
@@ -47,6 +51,7 @@ public class FeedController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('FARM_MANAGER')")
     public ResponseEntity<ResponseModel<Feed>> updateFeed(
             @PathVariable String id,
             @RequestBody Feed feed) {
@@ -57,6 +62,7 @@ public class FeedController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('FARM_MANAGER')")
     public ResponseEntity<ResponseModel<String>> deleteFeed(
             @PathVariable String id) {
         feedService.deleteFeed(id);
@@ -67,6 +73,7 @@ public class FeedController {
     }
 
     @GetMapping("/category/{categoryId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'FARM_MANAGER', 'STAFF')")
     public ResponseEntity<ResponseModel<List<Feed>>> getFeedsByCategory(
             @PathVariable String categoryId) {
         return ResponseEntity.ok(
@@ -76,6 +83,7 @@ public class FeedController {
     }
 
     @GetMapping("/status/{status}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'FARM_MANAGER', 'STAFF')")
     public ResponseEntity<ResponseModel<List<Feed>>> getFeedsByStatus(
             @PathVariable String status) {
         return ResponseEntity.ok(
@@ -86,6 +94,7 @@ public class FeedController {
 
     
     @GetMapping("/low-stock")
+    @PreAuthorize("hasAnyRole('ADMIN', 'FARM_MANAGER', 'STAFF')")
     public ResponseEntity<ResponseModel<List<Feed>>> getLowStockFeeds() {
         return ResponseEntity.ok(
                 ResponseModel.success(

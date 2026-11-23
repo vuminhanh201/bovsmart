@@ -11,21 +11,9 @@ export interface BlockchainBlock {
   hash: string;
 }
 
-interface BlockchainListResponse {
-  success: number;
-  data: BlockchainBlock[];
-  message: string;
-}
-
-interface BlockchainBlockResponse {
-  success: number;
-  data: BlockchainBlock;
-  message: string;
-}
-
-interface BlockchainVerifyResponse {
-  success: number;
-  data: boolean;
+interface ApiResponse<T> {
+  success: boolean | number;
+  data: T;
   message: string;
 }
 
@@ -44,37 +32,38 @@ const getAuthHeaders = (): HeadersInit => {
   };
 };
 
-// Lấy danh sách khối Blockchain
+const handleResponse = async <T>(
+  response: Response
+): Promise<ApiResponse<T>> => {
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      result.message || `Yêu cầu Blockchain thất bại. HTTP ${response.status}`
+    );
+  }
+
+  if (
+    result.success !== true &&
+    result.success !== 1
+  ) {
+    throw new Error(result.message || 'API Blockchain trả về kết quả không hợp lệ.');
+  }
+
+  return result as ApiResponse<T>;
+};
+
+// Lấy danh sách block từ Spring Boot
 export const getBlockchainBlocksApi = async (): Promise<BlockchainBlock[]> => {
   const response = await fetch(`${API_URL}/blocks`, {
     method: 'GET',
     headers: getAuthHeaders(),
   });
 
-  const result: BlockchainListResponse = await response.json();
+  const result = await handleResponse<BlockchainBlock[]>(response);
 
-  if (!response.ok || result.success !== 1) {
-    throw new Error(result.message || `Không thể lấy sổ cái. HTTP ${response.status}`);
-  }
-
-  return result.data || [];
-};
-
-// Tạo khối Blockchain mới
-export const createBlockchainBlockApi = async (
-  action: string,
-  data: Record<string, unknown>
-): Promise<BlockchainBlock> => {
-  const response = await fetch(`${API_URL}/blocks`, {
-    method: 'POST',
-    headers: getAuthHeaders(),
-    body: JSON.stringify({ action, data }),
-  });
-
-  const result: BlockchainBlockResponse = await response.json();
-
-  if (!response.ok || result.success !== 1) {
-    throw new Error(result.message || `Không thể tạo khối. HTTP ${response.status}`);
+  if (!Array.isArray(result.data)) {
+    throw new Error('Dữ liệu danh sách Blockchain không đúng định dạng.');
   }
 
   return result.data;
@@ -87,11 +76,23 @@ export const verifyBlockchainApi = async (): Promise<boolean> => {
     headers: getAuthHeaders(),
   });
 
-  const result: BlockchainVerifyResponse = await response.json();
+  const result = await handleResponse<boolean>(response);
 
-  if (!response.ok || result.success !== 1) {
-    throw new Error(result.message || `Không thể kiểm tra chuỗi. HTTP ${response.status}`);
-  }
+  return result.data;
+};
+
+// Tạo block - giữ export để các file đang sử dụng không bị lỗi
+export const createBlockchainBlockApi = async (
+  action: string,
+  data: Record<string, unknown>
+): Promise<BlockchainBlock> => {
+  const response = await fetch(`${API_URL}/blocks`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    body: JSON.stringify({ action, data }),
+  });
+
+  const result = await handleResponse<BlockchainBlock>(response);
 
   return result.data;
 };
