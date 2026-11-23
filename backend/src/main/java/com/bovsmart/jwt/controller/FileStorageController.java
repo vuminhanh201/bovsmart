@@ -76,7 +76,7 @@ public class FileStorageController {
 
     // Lấy URL xem ảnh
     @GetMapping("/{id}/url")
-    @PreAuthorize("hasAnyRole('FARM_MANAGER','STAFF')")
+    @PreAuthorize("hasAnyRole('ADMIN','FARM_MANAGER','STAFF')")
     public ResponseEntity<ResponseModel<FileUrlResponse>> getImageUrl(
             @PathVariable String id
     ) {
@@ -92,7 +92,7 @@ public class FileStorageController {
 
     // Lấy danh sách ảnh của người đăng nhập
     @GetMapping("/my-images")
-    @PreAuthorize("hasAnyRole('FARM_MANAGER','STAFF')")
+    @PreAuthorize("hasAnyRole('ADMIN','FARM_MANAGER','STAFF')")
     public ResponseEntity<ResponseModel<List<FileUploadResponse>>> getMyImages(
             Authentication authentication
     ) {
